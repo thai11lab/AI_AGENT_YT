@@ -67,36 +67,35 @@ def launch_phase2_background(
 
 def render_overview_tab() -> None:
     """Tab 0: Dashboard Tổng quan Realtime + Thumbnail + Discord Alert."""
-    st.subheader("📊 Tổng Quan Dự Án (Realtime)")
-
-    # Cấu hình Discord Webhook
-    with st.container(border=True):
-        c1, c2 = st.columns([3, 1])
-        with c1:
-            wh = st.text_input(
-                "🔔 Discord Webhook URL (Bắn cảnh báo ngay khi có lỗi / QA Warning)",
-                value=get_discord_webhook(),
-                type="password",
-                placeholder="https://discord.com/api/webhooks/...",
-                key="discord_wh_input",
-            )
-            st.session_state.discord_webhook_url = wh.strip()
-        with c2:
-            st.write("")
-            st.write("")
-            if st.button("📨 Test gửi Discord", use_container_width=True):
-                ok, detail = send_discord_alert(
-                    webhook_url=st.session_state.discord_webhook_url,
-                    title="✅ Faceless Studio: Kết nối Discord thành công",
-                    message="Hệ thống sẽ tự động bắn cảnh báo vào kênh này ngay khi phát hiện lỗi ở Phase 1, Phase 2 hoặc Agent QA.",
-                    level="success",
+    top_l, top_r = st.columns([3, 1])
+    with top_l:
+        wh_configured = bool(get_discord_webhook())
+        with st.expander(f"🔔 Cảnh báo Discord Webhook ({'Đã cấu hình' if wh_configured else 'Chưa cấu hình'})", expanded=not wh_configured):
+            c1, c2 = st.columns([3, 1])
+            with c1:
+                wh = st.text_input(
+                    "Webhook URL",
+                    value=get_discord_webhook(),
+                    type="password",
+                    placeholder="https://discord.com/api/webhooks/...",
+                    key="discord_wh_input",
+                    label_visibility="collapsed",
                 )
-                if ok:
-                    st.success(f"Đã gửi thành công ({detail})!")
-                else:
-                    st.error(f"Gửi thất bại: {detail}")
-
-    auto_refresh = st.toggle("⚡ Bật cập nhật Realtime (mỗi 3 giây)", value=True, key="overview_realtime_toggle")
+                st.session_state.discord_webhook_url = wh.strip()
+            with c2:
+                if st.button("📨 Test Discord", use_container_width=True):
+                    ok, detail = send_discord_alert(
+                        webhook_url=st.session_state.discord_webhook_url,
+                        title="✅ Faceless Studio: Kết nối Discord thành công",
+                        message="Hệ thống sẽ tự động bắn cảnh báo vào kênh này ngay khi phát hiện lỗi ở Phase 1, Phase 2 hoặc Agent QA.",
+                        level="success",
+                    )
+                    if ok:
+                        st.success(f"OK ({detail})")
+                    else:
+                        st.error(f"Lỗi: {detail}")
+    with top_r:
+        auto_refresh = st.toggle("⚡ Realtime (3s)", value=True, key="overview_realtime_toggle")
 
     @st.fragment(run_every=3 if auto_refresh else None)
     def _live_grid():
@@ -108,62 +107,64 @@ def render_overview_tab() -> None:
 
         k1, k2, k3, k4 = st.columns(4)
         k1.metric("Tổng dự án", total_cnt)
-        k2.metric("Đang chạy (Realtime)", running_cnt)
-        k3.metric("Hoàn thành (QA Passed)", done_cnt)
+        k2.metric("Đang chạy", running_cnt)
+        k3.metric("Hoàn thành", done_cnt)
         k4.metric("Lỗi / QA Warning", err_cnt)
 
         if not projects:
-            st.info("Chưa có dự án nào trong `production_package/`. Hãy tạo kịch bản ở Tab Kịch bản hoặc Niche Radar.")
+            st.info("Chưa có dự án nào trong `production_package/`.")
             return
 
-        cols = st.columns(2)
+        cols = st.columns(3)
         for idx, proj in enumerate(projects):
-            with cols[idx % 2]:
+            with cols[idx % 3]:
                 with st.container(border=True):
-                    # Ảnh đại diện dự án
                     if proj["thumbnail_path"] and Path(proj["thumbnail_path"]).exists():
+                        st.markdown('<div class="studio-thumb">', unsafe_allow_html=True)
                         st.image(proj["thumbnail_path"], use_container_width=True)
+                        st.markdown('</div>', unsafe_allow_html=True)
                     else:
-                        st.caption("🖼️ Chưa có ảnh preview (sẽ tự hiện khi Agent 03 dựng cảnh đầu tiên)")
+                        st.markdown(
+                            "<div style='height:125px;border-radius:6px;background:#111827;border:1px dashed #334155;"
+                            "display:flex;align-items:center;justify-content:center;color:#64748b;font-size:0.78rem;'>"
+                            "🖼️ Chưa có ảnh preview</div>",
+                            unsafe_allow_html=True,
+                        )
 
                     status = proj["status"]
                     badge = {
-                        "RUNNING": "🔵 ĐANG CHẠY",
-                        "COMPLETED": "🟢 HOÀN THÀNH",
-                        "WARNING": "🟠 QA WARNING",
+                        "RUNNING": "🔵 CHẠY",
+                        "COMPLETED": "🟢 XONG",
+                        "WARNING": "🟠 QA WARN",
                         "ERROR": "🔴 LỖI",
-                        "PAUSED": "🟡 TẠM DỪNG (CHECKPOINT)",
-                        "PENDING": "⚪ CHỜ DỰNG",
+                        "PAUSED": "🟡 TẠM DỪNG",
+                        "PENDING": "⚪ CHỜ",
                     }.get(status, status)
 
-                    st.markdown(f"**`{proj['run_id']}`** — {badge}")
+                    st.markdown(f"**`{proj['run_id'][:24]}`** · {badge}")
                     st.caption(
-                        f"Ngôn ngữ: `{proj['language'].upper()}` | Kênh: `{proj['channel_id']}` | "
-                        f"Tiến độ: **{proj['done_scenes']}/{proj['total_scenes']} cảnh** ({proj['progress_pct']}%) | Cập nhật: {proj['updated_at']}"
+                        f"`{proj['language'].upper()}` · `{proj['channel_id']}` · "
+                        f"**{proj['done_scenes']}/{proj['total_scenes']}** ({proj['progress_pct']}%)"
                     )
                     st.progress(min(max(proj["progress_pct"] / 100.0, 0.0), 1.0))
 
-                    if proj["current_step"]:
-                        scene_note = f" (`{proj['current_scene']}`)" if proj["current_scene"] else ""
-                        st.caption(f"Bước hiện tại: **{proj['current_step']}**{scene_note}")
-
                     if proj["error_msg"]:
-                        st.error(f"Chi tiết: {proj['error_msg'][:240]}")
+                        st.error(proj["error_msg"][:120])
 
                     b1, b2 = st.columns(2)
                     with b1:
-                        if st.button("📂 Chọn dự án này", key=f"sel_{proj['run_id']}", use_container_width=True):
+                        if st.button("📂 Mở", key=f"sel_{proj['run_id']}", use_container_width=True):
                             st.session_state.selected_phase2_pkg = proj["package_dir"]
-                            st.success(f"Đã chọn `{proj['run_id']}` — chuyển sang Tab Dựng Video hoặc Agent QA để xem.")
+                            st.toast(f"Đã chọn {proj['run_id']}")
                     with b2:
                         if status in {"ERROR", "PAUSED", "PENDING"}:
-                            if st.button("▶️ Chạy tiếp Checkpoint", key=f"resume_{proj['run_id']}", use_container_width=True):
+                            if st.button("▶️ Chạy tiếp", key=f"resume_{proj['run_id']}", use_container_width=True):
                                 launch_phase2_background(
                                     package_dir=Path(proj["package_dir"]),
                                     channel_id=proj["channel_id"] if proj["channel_id"] in CHANNEL_PRESETS else "med_forensic_us",
                                     discord_webhook_url=get_discord_webhook(),
                                 )
-                                st.toast(f"Đã kích hoạt chạy tiếp {proj['run_id']}!")
+                                st.toast(f"Đang chạy tiếp {proj['run_id']}!")
 
     _live_grid()
 

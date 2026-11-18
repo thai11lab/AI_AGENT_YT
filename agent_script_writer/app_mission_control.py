@@ -361,10 +361,73 @@ def execute_pipeline_live(url: str, manual_transcript: Optional[str], language: 
 # CẤU HÌNH TRANG STREAMLIT
 # =====================================================================
 st.set_page_config(
-    page_title="Faceless Studio v3.1 | Mission Control",
+    page_title="Faceless Studio v3.2 | Mission Control",
     page_icon="🎬",
     layout="wide",
     initial_sidebar_state="expanded"
+)
+
+st.markdown(
+    """
+    <style>
+      .block-container {
+        padding-top: 1.1rem !important;
+        padding-bottom: 1.5rem !important;
+        padding-left: 1.5rem !important;
+        padding-right: 1.5rem !important;
+        max-width: 1440px;
+      }
+      section[data-testid="stSidebar"] {
+        min-width: 270px !important;
+        max-width: 290px !important;
+      }
+      section[data-testid="stSidebar"] .block-container {
+        padding-top: 1rem !important;
+      }
+      [data-testid="stMetric"] {
+        background: #111827;
+        border: 1px solid #1f2937;
+        border-radius: 8px;
+        padding: 10px 14px !important;
+      }
+      [data-testid="stMetricLabel"] {
+        font-size: 0.75rem !important;
+        color: #94a3b8 !important;
+      }
+      [data-testid="stMetricValue"] {
+        font-size: 1.35rem !important;
+        font-weight: 600 !important;
+      }
+      .stTabs [data-baseweb="tab-list"] {
+        gap: 6px;
+        border-bottom: 1px solid #1f2937;
+        padding-bottom: 4px;
+      }
+      .stTabs [data-baseweb="tab"] {
+        height: 34px;
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-size: 0.82rem;
+        font-weight: 500;
+      }
+      .stTabs [aria-selected="true"] {
+        background-color: #1e293b !important;
+        color: #38bdf8 !important;
+      }
+      div[data-testid="stVerticalBlockBorderWrapper"] {
+        border-color: #1f2937 !important;
+        border-radius: 8px !important;
+        background-color: #0f172a !important;
+      }
+      .studio-thumb img {
+        height: 125px !important;
+        width: 100% !important;
+        object-fit: cover !important;
+        border-radius: 6px !important;
+      }
+    </style>
+    """,
+    unsafe_allow_html=True,
 )
 
 if "jobs" not in st.session_state:
@@ -585,17 +648,22 @@ if current_job.get("status") == "RUNNING" and not current_job.get("script"):
             st.success(f"🎉 Đã dựng xong Video mẫu: {mp4_out}")
             st.video(str(mp4_out))
 
-st.header(f"🎯 Dự Án: `{current_job['job_id']}`")
-st.markdown(f"**URL Đối thủ:** [{current_job['url']}]({current_job['url']}) | **Ngôn ngữ:** `{current_job.get('language', 'en').upper()}` | **Trạng thái:** `{current_job.get('status')}`")
+st.markdown(
+    f"<div style='display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;'>"
+    f"<span style='font-size:1.05rem;font-weight:600;'>🎬 Faceless Studio • <code>{current_job['job_id']}</code></span>"
+    f"<span style='font-size:0.8rem;color:#94a3b8;'>Lang: <b>{current_job.get('language', 'en').upper()}</b> · Status: <b>{current_job.get('status')}</b></span>"
+    f"</div>",
+    unsafe_allow_html=True,
+)
 
 tab0, tab_radar, tab1, tab2, tab_video, tab_qa, tab3 = st.tabs([
-    "📊 0. Tổng Quan (Realtime)",
-    "🎯 1. Niche Radar",
-    "🏛️ 2. Tranh Biện (Phase 1)",
-    "📝 3. Sửa Kịch Bản (Scene Editor)",
-    "🎬 4. Dựng Video (Phase 2)",
-    "🛡️ 5. Agent QA & Thành Phẩm",
-    "📦 6. Export JSON",
+    "📊 Tổng quan",
+    "🎯 Radar",
+    "🏛️ Tranh biện",
+    "📝 Kịch bản",
+    "🎬 Dựng Video",
+    "🛡️ QA & Xuất",
+    "📦 JSON",
 ])
 
 with tab0:
