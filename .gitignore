@@ -1,0 +1,32 @@
+# Environments & Secrets (NEVER commit API keys!)
+.env
+*.env
+!.env.example
+
+# Virtual environments & caches
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.cache/
+
+# Generated production outputs, videos, audio & databases
+production_package/
+memory_bank/*.db
+memory_bank/*.db-wal
+memory_bank/*.db-shm
+assets/sfx/*.wav
+assets/sfx/*.mp3
+voices/*.wav
+voices/*.mp3
+*.mp4
+*.mov
+*.wav
+*.mp3
+*.srt
+
+# OS & IDE files
+.DS_Store
+.vscode/
+.idea/

@@ -1,0 +1,32 @@
+# Cấu hình model Giai đoạn 1 — ưu tiên MIỄN PHÍ, ngân sách cứng $1.00–1.50 / video.
+# Giá và hạn mức thay đổi liên tục: kiểm tra lại trang chính thức trước khi chạy thật.
+run_budget:
+  max_usd: 1.20          # trần cứng (router dừng khi vượt)
+  soft_usd: 1.00
+  max_minutes: 25
+  max_hunter_calls: 24
+  max_scrape_pages: 40
+
+models:
+  autopsy:     {provider: google,   name: gemini-flash-latest,     note: "free tier AI Studio"}
+  architect:   {provider: google,   name: gemini-pro-latest,       note: "nếu free tier không có Pro: dùng deepseek-reasoner (rẻ)"}
+  hunter:      {provider: google,   name: gemini-flash-latest}
+  prosecutor:  {provider: deepseek, name: deepseek-reasoner,       note: "khác họ với architect để giảm đồng thuận giả"}
+  writer:      {provider: google,   name: gemini-flash-latest,     note: "mặc định rẻ; thử deepseek-chat cho so sánh"}
+  writer_hook: {provider: anthropic, name: claude-sonnet-latest,   note: "TÙY CHỌN: chỉ Hồi 1 (~12 cảnh) ≈ vài chục cent"}
+  transcribe:  {provider: groq,     name: whisper-large-v3-turbo,  note: "free plan có giới hạn RPM/ngày"}
+
+search:
+  exa:       {enabled: true,  note: "kiểm tra credit miễn phí"}
+  tavily:    {enabled: true,  note: "free tier hàng tháng"}
+  scraper:   jina_reader      # miễn phí hơn Firecrawl để bắt đầu
+
+# Mục tiêu video (đã tính theo ngân sách miễn phí)
+video:
+  target_minutes: 12
+  target_scenes: 130        # Hồi: 12 / 30 / 38 / 32 / 18
+  hook_seconds: 60
+  body_ai_video_share_max: 0.10   # ý định premium ở thân video (trần cứng 20%)
+  motion_tier: local_only         # local_only (Mac mini) | cloud_video (nâng cấp sau)
+  max_premium_clips: 8            # chỉ dùng khi motion_tier=cloud_video
+

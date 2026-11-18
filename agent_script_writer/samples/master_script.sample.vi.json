@@ -1,0 +1,427 @@
+{
+  "schema_version": "3.1",
+  "run_id": "sample-vi",
+  "language": "vi",
+  "source_rival_url": "https://youtube.com/watch?v=SAMPLE",
+  "plan": {
+    "selected_hypothesis_id": "HYP_01",
+    "viral_titles": [
+      "SAMPLE title 1",
+      "SAMPLE title 2",
+      "SAMPLE title 3",
+      "SAMPLE title 4",
+      "SAMPLE title 5"
+    ],
+    "thumbnail_concept": "Red LED close-up, clerk silhouette behind glass (SAMPLE)",
+    "style_bible": {
+      "visual_era_and_tone": "late 1990s office, cold, procedural dread",
+      "color_grading_lut": "teal shadows, amber practicals, low saturation",
+      "lens_and_grain_spec": "35mm, shallow depth of field, fine film grain",
+      "negative_prompt": "text, watermark, logo, extra fingers, deformed hands, blurry",
+      "entity_locks": [
+        {
+          "entity_token": "CHAR_CLERK_01",
+          "locked_visual_description": "a tired middle-aged clerk in a grey cardigan and wire-rimmed glasses",
+          "reference_image_prompt": "portrait of a tired middle-aged clerk in a grey cardigan and wire-rimmed glasses, neutral background, cinematic documentary still, 35mm lens, shallow depth of field, cold teal and amber color grade, fine film grain, practical lighting, photorealistic, no text overlay"
+        },
+        {
+          "entity_token": "OBJ_PRINTER_01",
+          "locked_visual_description": "a beige 1990s office laser printer with a blinking red warning LED",
+          "reference_image_prompt": "product shot of a beige 1990s office laser printer with a blinking red warning LED, plain wall background, cinematic documentary still, 35mm lens, shallow depth of field, cold teal and amber color grade, fine film grain, practical lighting, photorealistic, no text overlay"
+        },
+        {
+          "entity_token": "LOC_OFFICE_01",
+          "locked_visual_description": "a windowless basement records office with fluorescent tube lights and steel shelving",
+          "reference_image_prompt": "wide establishing shot of a windowless basement records office with fluorescent tube lights and steel shelving, cinematic documentary still, 35mm lens, shallow depth of field, cold teal and amber color grade, fine film grain, practical lighting, photorealistic, no text overlay"
+        }
+      ]
+    },
+    "acts": [
+      {
+        "act_number": 1,
+        "act_title": "Act 1",
+        "narrative_phase": "HOOK",
+        "target_scene_count": 12,
+        "story_beats": [
+          "beat 1",
+          "beat 2",
+          "beat 3"
+        ],
+        "open_loop_cliffhanger": "SAMPLE cliffhanger"
+      },
+      {
+        "act_number": 2,
+        "act_title": "Act 2",
+        "narrative_phase": "SETUP",
+        "target_scene_count": 30,
+        "story_beats": [
+          "beat 1",
+          "beat 2",
+          "beat 3"
+        ],
+        "open_loop_cliffhanger": "SAMPLE cliffhanger"
+      },
+      {
+        "act_number": 3,
+        "act_title": "Act 3",
+        "narrative_phase": "ESCALATION",
+        "target_scene_count": 38,
+        "story_beats": [
+          "beat 1",
+          "beat 2",
+          "beat 3"
+        ],
+        "open_loop_cliffhanger": "SAMPLE cliffhanger"
+      },
+      {
+        "act_number": 4,
+        "act_title": "Act 4",
+        "narrative_phase": "CLIMAX",
+        "target_scene_count": 32,
+        "story_beats": [
+          "beat 1",
+          "beat 2",
+          "beat 3"
+        ],
+        "open_loop_cliffhanger": "SAMPLE cliffhanger"
+      },
+      {
+        "act_number": 5,
+        "act_title": "Act 5",
+        "narrative_phase": "RESOLUTION",
+        "target_scene_count": 18,
+        "story_beats": [
+          "beat 1",
+          "beat 2",
+          "beat 3"
+        ],
+        "open_loop_cliffhanger": "SAMPLE cliffhanger"
+      }
+    ],
+    "unresolved_hooks": []
+  },
+  "scenes": [
+    {
+      "scene_id": "S001",
+      "act_number": 1,
+      "narrative_phase": "HOOK",
+      "visual_mode": "AI_VIDEO",
+      "voiceover_text": "Mười một giờ bốn mươi bảy, máy in kẹt giấy. Không ai ngẩng lên.",
+      "pause_after_sec": 0.2,
+      "flux_base_image_prompt": "close shot of a beige 1990s office laser printer with a blinking red warning LED with paper crumpled in the tray, inside a windowless basement records office with fluorescent tube lights and steel shelving, cinematic documentary still, 35mm lens, shallow depth of field, cold teal and amber color grade, fine film grain, practical lighting, photorealistic, no text overlay, dramatic low key lighting, muted background details, tense atmosphere, wide aspect 16:9 framing",
+      "negative_prompt": "text, watermark, logo, extra fingers, deformed hands, blurry",
+      "reference_entities": [
+        "CHAR_CLERK_01",
+        "OBJ_PRINTER_01",
+        "LOC_OFFICE_01"
+      ],
+      "video_motion_prompt": "slow push in on the jammed paper tray, red LED blinking",
+      "camera_move": "SLOW_PUSH_IN",
+      "parallax_spec": {
+        "foreground_isolated": "blurred edge of a steel shelf or paper stack",
+        "midground_main": "close shot of a beige 1990s office laser printer with a blinking red warning LED with paper crumpled in the tray",
+        "background_plate": "dim records office, fluorescent tubes"
+      },
+      "document_asset": null,
+      "on_screen_text": null,
+      "visual_bridge_from_prev": "cold open",
+      "audio_cues": [
+        {
+          "sfx_category": "MECHANICAL_FOLEY",
+          "trigger_word": "kẹt",
+          "volume_db": -8.0,
+          "sfx_generation_prompt": "short realistic office sound effect, dry, no music"
+        }
+      ],
+      "evidence_refs": [
+        "EV_001"
+      ],
+      "premium_priority": 5,
+      "start_sec": 0.0,
+      "duration_sec": 4.87,
+      "duration_source": "estimated",
+      "video_duration_sec": 4.87
+    },
+    {
+      "scene_id": "S002",
+      "act_number": 1,
+      "narrative_phase": "HOOK",
+      "visual_mode": "AI_VIDEO",
+      "voiceover_text": "Sau lớp kính, thư ký vẫn gõ phím, như chưa có gì xảy ra.",
+      "pause_after_sec": 0.2,
+      "flux_base_image_prompt": "a tired middle-aged clerk in a grey cardigan and wire-rimmed glasses typing behind a glass partition, reflection of fluorescent lights, inside a windowless basement records office with fluorescent tube lights and steel shelving, cinematic documentary still, 35mm lens, shallow depth of field, cold teal and amber color grade, fine film grain, practical lighting, photorealistic, no text overlay, dramatic low key lighting, muted background details, tense atmosphere, wide aspect 16:9 framing",
+      "negative_prompt": "text, watermark, logo, extra fingers, deformed hands, blurry",
+      "reference_entities": [
+        "CHAR_CLERK_01",
+        "OBJ_PRINTER_01"
+      ],
+      "video_motion_prompt": "subtle handheld sway, clerk keeps typing without looking up",
+      "camera_move": "HANDHELD_TENSION",
+      "parallax_spec": {
+        "foreground_isolated": "blurred edge of a steel shelf or paper stack",
+        "midground_main": "a tired middle-aged clerk in a grey cardigan and wire-rimmed glasses typing behind a glass partition, reflection of fluorescent lights",
+        "background_plate": "dim records office, fluorescent tubes"
+      },
+      "document_asset": null,
+      "on_screen_text": null,
+      "visual_bridge_from_prev": "continuous camera motion and matching red light",
+      "audio_cues": [
+        {
+          "sfx_category": "MECHANICAL_FOLEY",
+          "trigger_word": "gõ",
+          "volume_db": -8.0,
+          "sfx_generation_prompt": "short realistic office sound effect, dry, no music"
+        }
+      ],
+      "evidence_refs": [
+        "EV_001"
+      ],
+      "premium_priority": 4,
+      "start_sec": 4.87,
+      "duration_sec": 4.87,
+      "duration_source": "estimated",
+      "video_duration_sec": 4.87
+    },
+    {
+      "scene_id": "S003",
+      "act_number": 1,
+      "narrative_phase": "HOOK",
+      "visual_mode": "AI_VIDEO",
+      "voiceover_text": "Rồi đèn đỏ bắt đầu nhấp nháy, chậm rãi, như một nhịp mạch.",
+      "pause_after_sec": 0.2,
+      "flux_base_image_prompt": "extreme close up of the red warning LED on a beige 1990s office laser printer with a blinking red warning LED, inside a windowless basement records office with fluorescent tube lights and steel shelving, cinematic documentary still, 35mm lens, shallow depth of field, cold teal and amber color grade, fine film grain, practical lighting, photorealistic, no text overlay, dramatic low key lighting, muted background details, tense atmosphere, wide aspect 16:9 framing",
+      "negative_prompt": "text, watermark, logo, extra fingers, deformed hands, blurry",
+      "reference_entities": [
+        "CHAR_CLERK_01",
+        "OBJ_PRINTER_01"
+      ],
+      "video_motion_prompt": "red LED pulses slowly, faint dust drifting in light",
+      "camera_move": "SLOW_PUSH_IN",
+      "parallax_spec": {
+        "foreground_isolated": "blurred edge of a steel shelf or paper stack",
+        "midground_main": "extreme close up of the red warning LED on a beige 1990s office laser printer with a blinking red warning LED",
+        "background_plate": "dim records office, fluorescent tubes"
+      },
+      "document_asset": null,
+      "on_screen_text": null,
+      "visual_bridge_from_prev": "continuous camera motion and matching red light",
+      "audio_cues": [
+        {
+          "sfx_category": "MECHANICAL_FOLEY",
+          "trigger_word": "nhấp",
+          "volume_db": -8.0,
+          "sfx_generation_prompt": "short realistic office sound effect, dry, no music"
+        }
+      ],
+      "evidence_refs": [
+        "EV_001"
+      ],
+      "premium_priority": 3,
+      "start_sec": 9.74,
+      "duration_sec": 4.53,
+      "duration_source": "estimated",
+      "video_duration_sec": 4.53
+    },
+    {
+      "scene_id": "S004",
+      "act_number": 2,
+      "narrative_phase": "SETUP",
+      "visual_mode": "STATIC_PARALLAX",
+      "voiceover_text": "Ai cũng tin câu chuyện của video đầu tiên. Nhưng trang giấy nói điều khác.",
+      "pause_after_sec": 0.3,
+      "flux_base_image_prompt": "wide shot of a tired middle-aged clerk in a grey cardigan and wire-rimmed glasses standing between steel shelves in a windowless basement records office with fluorescent tube lights and steel shelving, cinematic documentary still, 35mm lens, shallow depth of field, cold teal and amber color grade, fine film grain, practical lighting, photorealistic, no text overlay, stacks of cardboard archive boxes labeled with dates, dust in the air, clear separation between foreground boxes and distant corridor",
+      "negative_prompt": "text, watermark, logo, extra fingers",
+      "reference_entities": [
+        "CHAR_CLERK_01",
+        "LOC_OFFICE_01"
+      ],
+      "video_motion_prompt": null,
+      "camera_move": null,
+      "parallax_spec": {
+        "foreground_isolated": "blurred archive boxes at the left edge",
+        "midground_main": "the clerk holding a thin folder",
+        "background_plate": "long dim corridor of steel shelving"
+      },
+      "document_asset": null,
+      "on_screen_text": null,
+      "visual_bridge_from_prev": "dissolve from red light to shelf warning lamp",
+      "audio_cues": [
+        {
+          "sfx_category": "PAPER_SLIDE",
+          "trigger_word": "trang",
+          "volume_db": -8.0,
+          "sfx_generation_prompt": "short realistic office sound effect, dry, no music"
+        }
+      ],
+      "evidence_refs": [
+        "EV_002"
+      ],
+      "premium_priority": 3,
+      "start_sec": 14.27,
+      "duration_sec": 5.3,
+      "duration_source": "estimated",
+      "video_duration_sec": null
+    },
+    {
+      "scene_id": "S005",
+      "act_number": 2,
+      "narrative_phase": "SETUP",
+      "visual_mode": "DOCUMENT_HIGHLIGHT",
+      "voiceover_text": "Trang mười lăm của báo cáo ghi một số seri mà chưa ai từng kiểm tra lại.",
+      "pause_after_sec": 0.3,
+      "flux_base_image_prompt": "top down macro of a printed technical report page on a wooden desk, cinematic documentary still, 35mm lens, shallow depth of field, cold teal and amber color grade, fine film grain, practical lighting, photorealistic, no text overlay, a metal ruler and a coffee ring stain beside the page, soft desk lamp light, sharp paper texture, placeholder for real document overlay",
+      "negative_prompt": null,
+      "reference_entities": [],
+      "video_motion_prompt": null,
+      "camera_move": null,
+      "parallax_spec": null,
+      "document_asset": {
+        "source_url": "https://example.org/sample-report.pdf",
+        "page": 15,
+        "highlight_text": "Serial No. 774-A"
+      },
+      "on_screen_text": null,
+      "visual_bridge_from_prev": "camera tilts down from the folder to the open page",
+      "audio_cues": [
+        {
+          "sfx_category": "PAPER_SLIDE",
+          "trigger_word": "seri",
+          "volume_db": -8.0,
+          "sfx_generation_prompt": "short realistic office sound effect, dry, no music"
+        }
+      ],
+      "evidence_refs": [
+        "EV_003"
+      ],
+      "premium_priority": 3,
+      "start_sec": 19.57,
+      "duration_sec": 5.97,
+      "duration_source": "estimated",
+      "video_duration_sec": null
+    },
+    {
+      "scene_id": "S006",
+      "act_number": 2,
+      "narrative_phase": "ESCALATION",
+      "visual_mode": "KINETIC_DATA_CARD",
+      "voiceover_text": "Khoản thiệt hại là bốn trăm mười hai nghìn đô la, ghi nhận chỉ trong một đêm.",
+      "pause_after_sec": 0.3,
+      "flux_base_image_prompt": "dark textured concrete wall background with faint scratches, cinematic documentary still, 35mm lens, shallow depth of field, cold teal and amber color grade, fine film grain, practical lighting, photorealistic, no text overlay, empty center area reserved for large typography, subtle vignette, cold light from the top left, no visible letters or numbers anywhere",
+      "negative_prompt": null,
+      "reference_entities": [],
+      "video_motion_prompt": null,
+      "camera_move": null,
+      "parallax_spec": null,
+      "document_asset": null,
+      "on_screen_text": "412.000 USD",
+      "visual_bridge_from_prev": "hard cut on the beat",
+      "audio_cues": [
+        {
+          "sfx_category": "SUB_BASS_HIT",
+          "trigger_word": "thiệt",
+          "volume_db": -8.0,
+          "sfx_generation_prompt": "short realistic office sound effect, dry, no music"
+        }
+      ],
+      "evidence_refs": [
+        "EV_004"
+      ],
+      "premium_priority": 3,
+      "start_sec": 25.54,
+      "duration_sec": 5.97,
+      "duration_source": "estimated",
+      "video_duration_sec": null
+    },
+    {
+      "scene_id": "S007",
+      "act_number": 2,
+      "narrative_phase": "ESCALATION",
+      "visual_mode": "STATIC_PARALLAX",
+      "voiceover_text": "Ba giờ trước đó, chính tài khoản này đã lặng lẽ bị rút sạch.",
+      "pause_after_sec": 0.3,
+      "flux_base_image_prompt": "medium shot of a glowing monitor showing a blank ledger window in a windowless basement records office with fluorescent tube lights and steel shelving, cinematic documentary still, 35mm lens, shallow depth of field, cold teal and amber color grade, fine film grain, practical lighting, photorealistic, no text overlay, a cold cup of tea and a ring of keys on the desk, blue screen light on the clerk's empty chair, deep shadows in the background",
+      "negative_prompt": null,
+      "reference_entities": [
+        "LOC_OFFICE_01"
+      ],
+      "video_motion_prompt": null,
+      "camera_move": null,
+      "parallax_spec": {
+        "foreground_isolated": "blurred keys on the desk edge",
+        "midground_main": "glowing monitor on the desk",
+        "background_plate": "dark shelving receding into shadow"
+      },
+      "document_asset": null,
+      "on_screen_text": null,
+      "visual_bridge_from_prev": "match cut: number card to monitor glow",
+      "audio_cues": [
+        {
+          "sfx_category": "AMBIENT_ROOM",
+          "trigger_word": "rút",
+          "volume_db": -8.0,
+          "sfx_generation_prompt": "short realistic office sound effect, dry, no music"
+        }
+      ],
+      "evidence_refs": [
+        "EV_004"
+      ],
+      "premium_priority": 3,
+      "start_sec": 31.51,
+      "duration_sec": 4.97,
+      "duration_source": "estimated",
+      "video_duration_sec": null
+    },
+    {
+      "scene_id": "S008",
+      "act_number": 2,
+      "narrative_phase": "ESCALATION",
+      "visual_mode": "STATIC_PARALLAX",
+      "voiceover_text": "Đó là chỗ mà dòng thời gian chính thức bắt đầu vô nghĩa.",
+      "pause_after_sec": 0.4,
+      "flux_base_image_prompt": "wide shot of a wall clock stopped at a quarter to midnight above a beige 1990s office laser printer with a blinking red warning LED, cinematic documentary still, 35mm lens, shallow depth of field, cold teal and amber color grade, fine film grain, practical lighting, photorealistic, no text overlay, paper strips on the floor, a single overhead tube light flickering, cold shadows, strong sense of unresolved tension",
+      "negative_prompt": null,
+      "reference_entities": [
+        "OBJ_PRINTER_01",
+        "LOC_OFFICE_01"
+      ],
+      "video_motion_prompt": null,
+      "camera_move": null,
+      "parallax_spec": {
+        "foreground_isolated": "blurred paper strips on the floor",
+        "midground_main": "printer under the wall clock",
+        "background_plate": "dim office wall with a notice board"
+      },
+      "document_asset": null,
+      "on_screen_text": null,
+      "visual_bridge_from_prev": "round monitor glow to round wall clock",
+      "audio_cues": [
+        {
+          "sfx_category": "TENSION_RISER",
+          "trigger_word": "dòng",
+          "volume_db": -8.0,
+          "sfx_generation_prompt": "short realistic office sound effect, dry, no music"
+        }
+      ],
+      "evidence_refs": [
+        "EV_002",
+        "EV_004"
+      ],
+      "premium_priority": 3,
+      "start_sec": 36.48,
+      "duration_sec": 4.73,
+      "duration_source": "estimated",
+      "video_duration_sec": null
+    }
+  ],
+  "output_spec": {
+    "aspect_ratio": "16:9",
+    "width": 1280,
+    "height": 720,
+    "fps": 30,
+    "max_ai_clip_sec": 5.0,
+    "motion_tier": "local_only",
+    "max_premium_clips": 8
+  },
+  "disclosure_ai_generated": true,
+  "estimated_total_duration_sec": 41.21
+}

@@ -1,0 +1,16 @@
+{
+  "channel_id": "rival_style",
+  "niche": "Cloned Style from Zack D. Films (Cut every 6.0s)",
+  "market_lang": "en",
+  "tts_engine": "auto",
+  "edge_voice": "en-US-AndrewNeural",
+  "openai_voice": "onyx",
+  "emotion_exaggeration": 0.65,
+  "speaking_rate": "+2%",
+  "pitch_shift": "-3Hz",
+  "breath_pause_ms": 120,
+  "emotion_prompt": "Speak in a deep, intimate, cold investigative documentary narrator voice like Lemmino and Fern. Include subtle natural breathing before dark revelations, measured pacing, and serious gravitas.",
+  "color_tint_hex": "#2d2a2a",
+  "accent_hex": "#1c6dd1",
+  "voice_sample_path": ""
+}

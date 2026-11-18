@@ -1,0 +1,5 @@
+[tool.pyrefly]
+search-path = [".", "agent_script_writer", "agent_video_producer"]
+
+[tool.pytest.ini_options]
+pythonpath = [".", "agent_script_writer", "agent_video_producer"]
