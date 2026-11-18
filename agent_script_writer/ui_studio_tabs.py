@@ -155,7 +155,8 @@ def render_overview_tab() -> None:
                     with b1:
                         if st.button("📂 Mở", key=f"sel_{proj['run_id']}", use_container_width=True):
                             st.session_state.selected_phase2_pkg = proj["package_dir"]
-                            st.toast(f"Đã chọn {proj['run_id']}")
+                            st.session_state.active_screen = "🛡️ Agent QA & Xuất" if status == "COMPLETED" else "🎬 Dựng Video"
+                            st.rerun()
                     with b2:
                         if status in {"ERROR", "PAUSED", "PENDING"}:
                             if st.button("▶️ Chạy tiếp", key=f"resume_{proj['run_id']}", use_container_width=True):

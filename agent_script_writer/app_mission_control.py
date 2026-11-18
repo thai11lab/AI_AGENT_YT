@@ -370,57 +370,77 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-      .block-container {
-        padding-top: 1.1rem !important;
-        padding-bottom: 1.5rem !important;
-        padding-left: 1.5rem !important;
-        padding-right: 1.5rem !important;
-        max-width: 1440px;
+      html, body, [class*="css"] {
+        font-size: 13px !important;
       }
+      header[data-testid="stHeader"] {
+        background: transparent !important;
+        height: 2rem !important;
+      }
+      #MainMenu, footer {
+        visibility: hidden;
+      }
+      .block-container {
+        padding-top: 0.8rem !important;
+        padding-bottom: 1.2rem !important;
+        padding-left: 1.4rem !important;
+        padding-right: 1.4rem !important;
+        max-width: 1180px !important;
+      }
+      [data-testid="stVerticalBlock"] {
+        gap: 0.55rem !important;
+      }
+      h1 { font-size: 1.25rem !important; margin-bottom: 0.2rem !important; }
+      h2 { font-size: 1.05rem !important; margin-bottom: 0.2rem !important; }
+      h3 { font-size: 0.92rem !important; margin-bottom: 0.2rem !important; }
       section[data-testid="stSidebar"] {
-        min-width: 270px !important;
-        max-width: 290px !important;
+        min-width: 245px !important;
+        max-width: 260px !important;
       }
       section[data-testid="stSidebar"] .block-container {
-        padding-top: 1rem !important;
+        padding-top: 0.8rem !important;
+      }
+      /* Menu điều hướng trong Sidebar */
+      section[data-testid="stSidebar"] div[role="radiogroup"] > label > div:first-child {
+        display: none !important;
+      }
+      section[data-testid="stSidebar"] div[role="radiogroup"] > label {
+        padding: 6px 10px !important;
+        border-radius: 6px !important;
+        margin-bottom: 2px !important;
+        cursor: pointer !important;
+        transition: background 0.15s ease;
+      }
+      section[data-testid="stSidebar"] div[role="radiogroup"] > label:hover {
+        background: #1e293b !important;
+      }
+      section[data-testid="stSidebar"] div[role="radiogroup"] > label[data-checked="true"],
+      section[data-testid="stSidebar"] div[role="radiogroup"] > label:has(input:checked) {
+        background: #1e293b !important;
+        border-left: 3px solid #38bdf8 !important;
       }
       [data-testid="stMetric"] {
         background: #111827;
         border: 1px solid #1f2937;
         border-radius: 8px;
-        padding: 10px 14px !important;
+        padding: 8px 12px !important;
       }
       [data-testid="stMetricLabel"] {
-        font-size: 0.75rem !important;
+        font-size: 0.72rem !important;
         color: #94a3b8 !important;
       }
       [data-testid="stMetricValue"] {
-        font-size: 1.35rem !important;
+        font-size: 1.2rem !important;
         font-weight: 600 !important;
-      }
-      .stTabs [data-baseweb="tab-list"] {
-        gap: 6px;
-        border-bottom: 1px solid #1f2937;
-        padding-bottom: 4px;
-      }
-      .stTabs [data-baseweb="tab"] {
-        height: 34px;
-        padding: 4px 12px;
-        border-radius: 6px;
-        font-size: 0.82rem;
-        font-weight: 500;
-      }
-      .stTabs [aria-selected="true"] {
-        background-color: #1e293b !important;
-        color: #38bdf8 !important;
       }
       div[data-testid="stVerticalBlockBorderWrapper"] {
         border-color: #1f2937 !important;
         border-radius: 8px !important;
         background-color: #0f172a !important;
+        padding: 0.65rem !important;
       }
       .studio-thumb img {
-        height: 125px !important;
+        height: 110px !important;
         width: 100% !important;
         object-fit: cover !important;
         border-radius: 6px !important;
@@ -437,52 +457,71 @@ if "active_job_id" not in st.session_state:
     st.session_state.active_job_id = "job-mock-apollo-2026"
 
 
+SCREENS = [
+    "📊 Tổng quan",
+    "🎯 Niche Radar",
+    "🎬 Dựng Video",
+    "🛡️ Agent QA & Xuất",
+    "🏛️ Tranh biện (Phase 1)",
+    "📝 Sửa Kịch Bản",
+    "📦 Export JSON",
+]
+if "active_screen" not in st.session_state or st.session_state.active_screen not in SCREENS:
+    st.session_state.active_screen = "📊 Tổng quan"
+
 # =====================================================================
-# SIDEBAR: MULTI-JOB QUEUE & CONTROL CENTER
+# SIDEBAR: MENU ĐIỀU HƯỚNG & CẤU HÌNH NHANH
 # =====================================================================
 with st.sidebar:
-    st.title("🎬 Mission Control")
-    st.caption("Phase 1 Autonomous Brain v3.1")
+    st.markdown("### 🎬 Faceless Studio")
+    st.caption("v3.2 • Script + Video + QA")
+
+    active_screen = st.radio(
+        "Menu",
+        SCREENS,
+        key="active_screen",
+        label_visibility="collapsed",
+    )
     st.divider()
 
-    st.subheader("📥 Cấu Hình Dự Án")
-    urls_input = st.text_input(
-        "YouTube Video URL Đối Thủ:",
-        value="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-    )
+    with st.expander("⚡ Khởi tạo Job mới", expanded=False):
+        urls_input = st.text_input(
+            "YouTube URL đối thủ",
+            value="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        )
+        manual_vo = st.text_area("Transcript tay (tùy chọn)", height=80)
+        col_sb1, col_sb2 = st.columns(2)
+        with col_sb1:
+            lang_choice = st.selectbox("Ngôn ngữ", ["en", "vi"], index=0, format_func=lambda x: "EN" if x == "en" else "VI")
+        with col_sb2:
+            motion_choice = st.selectbox("Tier", ["local_only", "cloud_video"], index=0)
 
-    with st.expander("📝 Tùy Chọn Dán Transcript Tay (Nếu YouTube chặn tải)", expanded=False):
-        manual_vo = st.text_area("Dán nội dung transcript tại đây:", height=120)
+        if st.button("🚀 Chạy Pipeline", type="primary", use_container_width=True):
+            if not urls_input.strip().startswith("http"):
+                st.error("Link YouTube không hợp lệ!")
+            else:
+                new_id = f"job-{time.strftime('%Y%m%d-%H%M%S')}"
+                st.session_state.jobs[new_id] = {
+                    "job_id": new_id,
+                    "url": urls_input.strip(),
+                    "status": "RUNNING",
+                    "language": lang_choice,
+                    "debate_feed": [],
+                    "script": {},
+                }
+                st.session_state.active_job_id = new_id
+                st.rerun()
 
-    col_sb1, col_sb2 = st.columns(2)
-    with col_sb1:
-        lang_choice = st.selectbox("Ngôn ngữ", ["en", "vi"], index=0, format_func=lambda x: "🇺🇸 English" if x == "en" else "🇻🇳 Tiếng Việt")
-    with col_sb2:
-        motion_choice = st.selectbox("Render Tier", ["local_only", "cloud_video"], index=0)
-
-    # NÚT CHẠY PIPELINE THẬT
-    if st.button("🚀 Khởi Chạy Pipeline THẬT", type="primary", use_container_width=True):
-        if not urls_input.strip().startswith("http"):
-            st.error("Vui lòng nhập link YouTube hợp lệ!")
-        else:
-            new_id = f"job-{time.strftime('%Y%m%d-%H%M%S')}"
-            new_job = {
-                "job_id": new_id,
-                "url": urls_input.strip(),
-                "status": "RUNNING",
-                "language": lang_choice,
-                "debate_feed": [],
-                "script": {}
-            }
-            st.session_state.jobs[new_id] = new_job
-            st.session_state.active_job_id = new_id
+        if st.button("🔄 Nạp Mock Preview", use_container_width=True):
+            st.session_state.jobs["job-mock-apollo-2026"] = get_mock_job_state()
+            st.session_state.active_job_id = "job-mock-apollo-2026"
             st.rerun()
 
-    # NÚT TẠO JOB MOCK ĐỂ PREVIEW TEST UI
-    if st.button("🔄 Nạp Dữ Liệu Mô Phỏng (Preview)", use_container_width=True):
-        st.session_state.jobs["job-mock-apollo-2026"] = get_mock_job_state()
-        st.session_state.active_job_id = "job-mock-apollo-2026"
-        st.rerun()
+    if "urls_input" not in locals():
+        urls_input = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        manual_vo = ""
+        lang_choice = "en"
+        motion_choice = "local_only"
 
     st.divider()
     st.subheader("📋 Hàng Đợi Công Việc (Job Queue)")
@@ -656,33 +695,20 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-tab0, tab_radar, tab1, tab2, tab_video, tab_qa, tab3 = st.tabs([
-    "📊 Tổng quan",
-    "🎯 Radar",
-    "🏛️ Tranh biện",
-    "📝 Kịch bản",
-    "🎬 Dựng Video",
-    "🛡️ QA & Xuất",
-    "📦 JSON",
-])
-
-with tab0:
+if active_screen == "📊 Tổng quan":
     render_overview_tab()
-
-with tab_radar:
+elif active_screen == "🎯 Niche Radar":
     render_niche_radar_tab()
-
-with tab_video:
+elif active_screen == "🎬 Dựng Video":
     render_phase2_video_tab()
-
-with tab_qa:
+elif active_screen == "🛡️ Agent QA & Xuất":
     render_qa_output_tab()
 
 
 # =====================================================================
 # TAB 1: REAL-TIME ADVERSARIAL DEBATE STREAMING
 # =====================================================================
-with tab1:
+elif active_screen == "🏛️ Tranh biện (Phase 1)":
     col_m1, col_m2, col_m3, col_m4 = st.columns(4)
     with col_m1:
         st.metric(label="Competitor Hook WPM", value=f"{current_job.get('rival_wpm', 150):.0f} WPM", delta="-12% vs body")
@@ -730,7 +756,7 @@ with tab1:
 # =====================================================================
 # TAB 2: INTERACTIVE SCENE-BY-SCENE EDITOR & SINGLE-SHOT REROLL
 # =====================================================================
-with tab2:
+elif active_screen == "📝 Sửa Kịch Bản":
     script_data = current_job.get("script", {})
     plan = script_data.get("plan", {})
     style_bible = plan.get("style_bible", {})
@@ -879,7 +905,7 @@ Trigger word in audio cues MUST be in the voiceover.
 # =====================================================================
 # TAB 3: EXPORT & JSON INSPECTOR
 # =====================================================================
-with tab3:
+elif active_screen == "📦 Export JSON":
     st.subheader("📦 Trình Đóng Gói Xuất Xưởng Cho Giai Đoạn 2 (Phase 2 Delivery)")
 
     try:
