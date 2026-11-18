@@ -12,6 +12,7 @@ import subprocess
 from pathlib import Path
 from typing import Dict, List, Set, Tuple
 
+from shared.alerts import send_discord_alert
 from shared.contracts import MotionSceneOutput, VoiceSceneOutput
 
 
@@ -78,6 +79,54 @@ def deduplicate_and_audit_scenes(
     }
 
 
+def _parse_srt_ts(ts: str) -> float:
+    m = re.match(r"^(\d{2}):(\d{2}):(\d{2})[,.](\d{3})$", ts.strip())
+    if not m:
+        return -1.0
+    h, mi, s, ms = (int(x) for x in m.groups())
+    return h * 3600 + mi * 60 + s + ms / 1000.0
+
+
+def audit_srt_file(srt_path: Path) -> Dict:
+    """Kiểm tra cấu trúc file phụ đề .srt: số block, timestamp hợp lệ, và phát hiện chồng lấn."""
+    if not srt_path.exists() or srt_path.stat().st_size <= 20:
+        return {"ok": False, "blocks": 0, "overlaps": 0, "issues": ["Thiếu file phụ đề .srt hoặc file rỗng."]}
+
+    raw = srt_path.read_text(encoding="utf-8", errors="ignore").strip()
+    blocks = [b.strip() for b in re.split(r"\r?\n\r?\n+", raw) if b.strip()]
+    issues: List[str] = []
+    overlaps = 0
+    prev_end = 0.0
+
+    for idx, blk in enumerate(blocks, 1):
+        lines = blk.splitlines()
+        ts_line = next((ln for ln in lines if "-->" in ln), None)
+        if not ts_line:
+            issues.append(f"Block #{idx} thiếu dòng timestamp.")
+            continue
+        parts = ts_line.split("-->")
+        if len(parts) != 2:
+            issues.append(f"Block #{idx} sai định dạng timestamp.")
+            continue
+        start_s = _parse_srt_ts(parts[0])
+        end_s = _parse_srt_ts(parts[1].split()[0])
+        if start_s < 0 or end_s <= start_s:
+            issues.append(f"Block #{idx} có mốc thời gian không hợp lệ ({ts_line.strip()}).")
+            continue
+        if start_s + 0.05 < prev_end:
+            overlaps += 1
+        prev_end = max(prev_end, end_s)
+
+    if overlaps > 0:
+        issues.append(f"Có {overlaps} cặp phụ đề bị chồng lấn mốc thời gian.")
+    return {
+        "ok": len(blocks) > 0 and len(issues) == 0,
+        "blocks": len(blocks),
+        "overlaps": overlaps,
+        "issues": issues,
+    }
+
+
 def _ffprobe_streams_and_duration(mp4_path: Path) -> Dict:
     ffprobe = shutil.which("ffprobe")
     if not ffprobe or not mp4_path.exists() or mp4_path.stat().st_size < 1000:
@@ -89,10 +138,21 @@ def _ffprobe_streams_and_duration(mp4_path: Path) -> Dict:
         ).decode("utf-8", errors="ignore")
         info = json.loads(raw)
         streams = info.get("streams") or []
-        has_v = any(s.get("codec_type") == "video" for s in streams)
-        has_a = any(s.get("codec_type") == "audio" for s in streams)
+        v_stream = next((s for s in streams if s.get("codec_type") == "video"), None)
+        a_stream = next((s for s in streams if s.get("codec_type") == "audio"), None)
+        has_v = v_stream is not None
+        has_a = a_stream is not None
         dur = float((info.get("format") or {}).get("duration") or 0.0)
-        return {"ok": has_v and has_a and dur > 0.5, "duration_sec": round(dur, 2), "has_video": has_v, "has_audio": has_a}
+        return {
+            "ok": has_v and has_a and dur > 0.5,
+            "duration_sec": round(dur, 2),
+            "has_video": has_v,
+            "has_audio": has_a,
+            "width": int(v_stream.get("width", 0)) if v_stream else 0,
+            "height": int(v_stream.get("height", 0)) if v_stream else 0,
+            "video_codec": v_stream.get("codec_name", "") if v_stream else "",
+            "audio_codec": a_stream.get("codec_name", "") if a_stream else "",
+        }
     except Exception:
         return {"ok": False, "duration_sec": 0.0, "has_video": False, "has_audio": False}
 
@@ -103,6 +163,7 @@ def audit_final_video(
     voice_outputs: Dict[str, VoiceSceneOutput],
     motion_outputs: Dict[str, MotionSceneOutput],
     out_report_path: Path,
+    discord_webhook_url: str = "",
 ) -> Dict:
     """Kiểm định toàn diện video đầu ra: Chống lặp nội dung + Khớp thời lượng Audio/Video + Kiểm tra phụ đề .srt."""
     dup_audit = deduplicate_and_audit_scenes(scenes, similarity_threshold=0.55, drop_duplicates=False)
@@ -117,7 +178,8 @@ def audit_final_video(
     ]
 
     srt_path = final_mp4.with_suffix(".srt")
-    srt_ok = srt_path.exists() and srt_path.stat().st_size > 20
+    srt_audit = audit_srt_file(srt_path)
+    srt_ok = srt_audit["ok"]
 
     warnings: List[str] = []
     if dup_audit["duplicates"]:
@@ -129,7 +191,7 @@ def audit_final_video(
     if not probe["ok"]:
         warnings.append("File MP4 đầu ra thiếu luồng Video hoặc Audio hợp lệ.")
     if not srt_ok:
-        warnings.append("Thiếu file phụ đề .srt đi kèm.")
+        warnings.extend(srt_audit["issues"] or ["Thiếu file phụ đề .srt đi kèm."])
 
     status = "PASSED" if not warnings else "WARNING"
     report = {
@@ -140,7 +202,8 @@ def audit_final_video(
         "expected_voice_duration_sec": expected_voice_dur,
         "actual_video_duration_sec": actual_dur,
         "sync_drift_sec": sync_drift_sec,
-        "srt_exists": srt_ok,
+        "srt_exists": srt_path.exists() and srt_path.stat().st_size > 20,
+        "srt_audit": srt_audit,
         "empty_motion_clips": empty_clips,
         "duplicate_scenes_detected": dup_audit["duplicates"],
         "warnings": warnings,
@@ -148,4 +211,18 @@ def audit_final_video(
 
     out_report_path.parent.mkdir(parents=True, exist_ok=True)
     out_report_path.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
+
+    if status != "PASSED":
+        send_discord_alert(
+            webhook_url=discord_webhook_url,
+            title=f"⚠️ Agent QA {status}: {final_mp4.name}",
+            message="\n".join(f"• {w}" for w in warnings),
+            level="warning",
+            fields=[
+                {"name": "Sync Drift", "value": f"{sync_drift_sec}s"},
+                {"name": "Empty Clips", "value": str(len(empty_clips))},
+                {"name": "SRT Blocks", "value": str(srt_audit.get("blocks", 0))},
+            ],
+        )
+
     return report

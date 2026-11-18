@@ -19,6 +19,7 @@ from agent_06_qa_inspector.qa_inspector import (  # noqa: E402
     audit_final_video,
     deduplicate_and_audit_scenes,
 )
+from shared.alerts import send_discord_alert, write_live_status  # noqa: E402
 from shared.channels import CHANNEL_PRESETS, get_channel_persona  # noqa: E402
 from shared.contracts import Phase2Manifest  # noqa: E402
 
@@ -38,6 +39,7 @@ def run_phase2_pipeline(
     force_local: bool = False,
     fresh: bool = False,
     clone_style_url: str = "",
+    discord_webhook_url: str = "",
 ) -> Path:
     pkg = package_dir.resolve()
     ms_path = pkg / "master_script.json"
@@ -93,73 +95,179 @@ def run_phase2_pipeline(
     visual_dir = out_root / "visual"
     motion_dir = out_root / "motion"
 
-    for idx, sc in enumerate(scenes, 1):
-        sid = sc["scene_id"]
-        # 1. AGENT VOICE
-        if sid in manifest.voice_outputs and Path(manifest.voice_outputs[sid].audio_path).exists():
-            v_out = manifest.voice_outputs[sid]
-        else:
-            v_out = synthesize_scene_voice(sc, voice_dir, persona, force_local=force_local)
-            manifest.voice_outputs[sid] = v_out
-            _save_manifest(manifest_path, manifest)
+    current_step = "Khởi động Phase 2"
+    current_sid = ""
+    try:
+        write_live_status(pkg, "RUNNING", current_step, "", 0, total, channel_id=persona.channel_id)
 
-        # 2. AGENT VISUAL
-        if sid in manifest.visual_outputs and Path(manifest.visual_outputs[sid].base_image_path).exists():
-            vis_out = manifest.visual_outputs[sid]
-        else:
-            vis_out = generate_scene_visual(sc, visual_dir, persona, evidence_map=ev_map, force_local=force_local)
-            manifest.visual_outputs[sid] = vis_out
-            _save_manifest(manifest_path, manifest)
+        for idx, sc in enumerate(scenes, 1):
+            sid = sc["scene_id"]
+            current_sid = sid
 
-        # 3. AGENT MOTION
-        if sid in manifest.motion_outputs and Path(manifest.motion_outputs[sid].video_clip_path).exists():
-            m_out = manifest.motion_outputs[sid]
-        else:
-            m_out = render_scene_motion(sc, vis_out, v_out.duration_sec, motion_dir, force_local=force_local, voice_out=v_out)
-            manifest.motion_outputs[sid] = m_out
-            _save_manifest(manifest_path, manifest)
+            # 1. AGENT VOICE
+            current_step = "Agent 02: Voice TTS"
+            write_live_status(pkg, "RUNNING", current_step, sid, idx - 1, total, channel_id=persona.channel_id)
+            if sid in manifest.voice_outputs and Path(manifest.voice_outputs[sid].audio_path).exists():
+                v_out = manifest.voice_outputs[sid]
+            else:
+                v_out = synthesize_scene_voice(sc, voice_dir, persona, force_local=force_local)
+                manifest.voice_outputs[sid] = v_out
+                _save_manifest(manifest_path, manifest)
 
-        print(
-            f"  [{idx:03d}/{total:03d}] {sid} ({sc.get('visual_mode')}) | "
-            f"Voice: {v_out.duration_sec:.1f}s ({v_out.engine_used}) | "
-            f"Visual: {vis_out.provider_used} | Motion: {m_out.motion_engine}",
-            flush=True,
+            # 2. AGENT VISUAL
+            current_step = "Agent 03: Visual Assets"
+            write_live_status(pkg, "RUNNING", current_step, sid, idx - 1, total, channel_id=persona.channel_id)
+            if sid in manifest.visual_outputs and Path(manifest.visual_outputs[sid].base_image_path).exists():
+                vis_out = manifest.visual_outputs[sid]
+            else:
+                vis_out = generate_scene_visual(sc, visual_dir, persona, evidence_map=ev_map, force_local=force_local)
+                manifest.visual_outputs[sid] = vis_out
+                _save_manifest(manifest_path, manifest)
+
+            # 3. AGENT MOTION
+            current_step = "Agent 04: Motion / B-Roll"
+            write_live_status(pkg, "RUNNING", current_step, sid, idx - 1, total, channel_id=persona.channel_id)
+            if sid in manifest.motion_outputs and Path(manifest.motion_outputs[sid].video_clip_path).exists():
+                m_out = manifest.motion_outputs[sid]
+            else:
+                m_out = render_scene_motion(sc, vis_out, v_out.duration_sec, motion_dir, force_local=force_local, voice_out=v_out)
+                manifest.motion_outputs[sid] = m_out
+                _save_manifest(manifest_path, manifest)
+
+            write_live_status(pkg, "RUNNING", "Đang dựng từng cảnh", sid, idx, total, channel_id=persona.channel_id)
+            print(
+                f"  [{idx:03d}/{total:03d}] {sid} ({sc.get('visual_mode')}) | "
+                f"Voice: {v_out.duration_sec:.1f}s ({v_out.engine_used}) | "
+                f"Visual: {vis_out.provider_used} | Motion: {m_out.motion_engine}",
+                flush=True,
+            )
+
+        # 4. AGENT COMPOSITOR (FINAL CUT)
+        current_step = "Agent 05: Master Compositor"
+        current_sid = "FINAL_CUT"
+        write_live_status(pkg, "RUNNING", current_step, current_sid, total, total, channel_id=persona.channel_id)
+
+        out_filename = f"preview_{total}_scenes.mp4" if max_scenes > 0 else "final_documentary.mp4"
+        final_mp4 = out_root / out_filename
+        print(f"\n--- [AGENT 4: MASTER COMPOSITOR] Đang hòa âm SFX, khắc phụ đề & xuất {out_filename}... ---", flush=True)
+        compose_final_video(
+            scenes=scenes,
+            voice_outputs=manifest.voice_outputs,
+            motion_outputs=manifest.motion_outputs,
+            work_dir=out_root,
+            final_mp4_path=final_mp4,
+        )
+        manifest.final_video_path = str(final_mp4)
+        manifest.total_duration_sec = round(sum(manifest.voice_outputs[s["scene_id"]].duration_sec for s in scenes), 2)
+        _save_manifest(manifest_path, manifest)
+
+        # 5. AGENT 06: OUTPUT VIDEO & ANTI-REPETITION QA INSPECTOR
+        current_step = "Agent 06: QA Inspector"
+        write_live_status(pkg, "RUNNING", current_step, current_sid, total, total, channel_id=persona.channel_id)
+        qa_report_path = out_root / "qa_report.json"
+        qa_res = audit_final_video(
+            final_mp4=final_mp4,
+            scenes=scenes,
+            voice_outputs=manifest.voice_outputs,
+            motion_outputs=manifest.motion_outputs,
+            out_report_path=qa_report_path,
+            discord_webhook_url=discord_webhook_url,
         )
 
-    # 4. AGENT COMPOSITOR (FINAL CUT)
-    out_filename = f"preview_{total}_scenes.mp4" if max_scenes > 0 else "final_documentary.mp4"
-    final_mp4 = out_root / out_filename
-    print(f"\n--- [AGENT 4: MASTER COMPOSITOR] Đang hòa âm SFX, khắc phụ đề & xuất {out_filename}... ---", flush=True)
-    compose_final_video(
-        scenes=scenes,
-        voice_outputs=manifest.voice_outputs,
-        motion_outputs=manifest.motion_outputs,
-        work_dir=out_root,
-        final_mp4_path=final_mp4,
-    )
-    manifest.final_video_path = str(final_mp4)
-    manifest.total_duration_sec = round(sum(manifest.voice_outputs[s["scene_id"]].duration_sec for s in scenes), 2)
-    _save_manifest(manifest_path, manifest)
+        final_status = "COMPLETED" if qa_res.get("qa_status") == "PASSED" else "WARNING"
+        write_live_status(
+            pkg,
+            final_status,
+            f"Hoàn tất ({qa_res.get('qa_status')})",
+            "",
+            total,
+            total,
+            error_msg="; ".join(qa_res.get("warnings", [])),
+            channel_id=persona.channel_id,
+        )
 
-    # 5. AGENT 06: OUTPUT VIDEO & ANTI-REPETITION QA INSPECTOR
-    qa_report_path = out_root / "qa_report.json"
-    qa_res = audit_final_video(
-        final_mp4=final_mp4,
-        scenes=scenes,
-        voice_outputs=manifest.voice_outputs,
-        motion_outputs=manifest.motion_outputs,
-        out_report_path=qa_report_path,
+        print(f"\n{'='*70}", flush=True)
+        print(f"HOÀN TẤT GIAI ĐOẠN 2! Video thành phẩm: {final_mp4}", flush=True)
+        print(f"Phụ đề chuẩn YouTube (.srt)      : {final_mp4.with_suffix('.srt')}", flush=True)
+        print(f"Tổng thời lượng thực tế          : {qa_res['actual_video_duration_sec']}s (Dự kiến: {qa_res['expected_voice_duration_sec']}s | Lệch: {qa_res['sync_drift_sec']}s)", flush=True)
+        print(f"Kiểm định QA (Agent 06)          : {qa_res['qa_status']} | Báo cáo: {qa_report_path.name}", flush=True)
+        for w_msg in qa_res.get("warnings", []):
+            print(f"  ⚠️ {w_msg}", flush=True)
+        print(f"{'='*70}\n", flush=True)
+        return final_mp4
+    except Exception as exc:
+        err_text = f"{type(exc).__name__}: {exc}"
+        write_live_status(
+            pkg,
+            "ERROR",
+            current_step,
+            current_sid,
+            len(manifest.motion_outputs),
+            total,
+            error_msg=err_text,
+            channel_id=persona.channel_id,
+        )
+        send_discord_alert(
+            webhook_url=discord_webhook_url,
+            title=f"🚨 Lỗi Phase 2: {pkg.name}",
+            message=err_text,
+            level="error",
+            fields=[
+                {"name": "Agent / Bước", "value": current_step},
+                {"name": "Cảnh (Scene)", "value": current_sid or "-"},
+                {"name": "Kênh", "value": persona.channel_id},
+            ],
+        )
+        raise
+
+
+def reroll_single_scene(
+    package_dir: Path,
+    scene_id: str,
+    channel_id: str = "med_forensic_us",
+    force_local: bool = False,
+    discord_webhook_url: str = "",
+) -> None:
+    """Dựng lại riêng 1 cảnh (Voice + Visual + Motion) trong checkpoint hiện tại."""
+    pkg = package_dir.resolve()
+    ms = json.loads((pkg / "master_script.json").read_text(encoding="utf-8"))
+    ev_path = pkg / "evidence_dossier.json"
+    ev_list = json.loads(ev_path.read_text(encoding="utf-8")) if ev_path.exists() else []
+    ev_map = {e["evidence_id"]: e for e in ev_list if isinstance(e, dict) and "evidence_id" in e}
+
+    scene = next((s for s in ms.get("scenes", []) if s.get("scene_id") == scene_id), None)
+    if not scene:
+        raise ValueError(f"Không tìm thấy cảnh {scene_id} trong {pkg.name}")
+
+    persona = get_channel_persona(channel_id, ms.get("language", "en"))
+    out_root = pkg / "phase2_output"
+    manifest_path = out_root / "phase2_manifest.json"
+    manifest = (
+        Phase2Manifest.model_validate_json(manifest_path.read_text(encoding="utf-8"))
+        if manifest_path.exists()
+        else Phase2Manifest(run_id=ms.get("run_id", pkg.name), channel_id=persona.channel_id, source_package_dir=str(pkg), output_dir=str(out_root))
     )
 
-    print(f"\n{'='*70}", flush=True)
-    print(f"HOÀN TẤT GIAI ĐOẠN 2! Video thành phẩm: {final_mp4}", flush=True)
-    print(f"Phụ đề chuẩn YouTube (.srt)      : {final_mp4.with_suffix('.srt')}", flush=True)
-    print(f"Tổng thời lượng thực tế          : {qa_res['actual_video_duration_sec']}s (Dự kiến: {qa_res['expected_voice_duration_sec']}s | Lệch: {qa_res['sync_drift_sec']}s)", flush=True)
-    print(f"Kiểm định QA (Agent 06)          : {qa_res['qa_status']} | Báo cáo: {qa_report_path.name}", flush=True)
-    for w_msg in qa_res.get("warnings", []):
-        print(f"  ⚠️ {w_msg}", flush=True)
-    print(f"{'='*70}\n", flush=True)
-    return final_mp4
+    try:
+        write_live_status(pkg, "RUNNING", f"Reroll cảnh {scene_id}", scene_id, len(manifest.motion_outputs), len(ms.get("scenes", [])), channel_id=persona.channel_id)
+        v_out = synthesize_scene_voice(scene, out_root / "voice", persona, force_local=force_local)
+        manifest.voice_outputs[scene_id] = v_out
+        vis_out = generate_scene_visual(scene, out_root / "visual", persona, evidence_map=ev_map, force_local=force_local)
+        manifest.visual_outputs[scene_id] = vis_out
+        m_out = render_scene_motion(scene, vis_out, v_out.duration_sec, out_root / "motion", force_local=force_local, voice_out=v_out)
+        manifest.motion_outputs[scene_id] = m_out
+        _save_manifest(manifest_path, manifest)
+        write_live_status(pkg, "PAUSED", f"Đã Reroll xong {scene_id}", scene_id, len(manifest.motion_outputs), len(ms.get("scenes", [])), channel_id=persona.channel_id)
+    except Exception as exc:
+        err_text = f"{type(exc).__name__}: {exc}"
+        write_live_status(pkg, "ERROR", f"Reroll {scene_id}", scene_id, len(manifest.motion_outputs), len(ms.get("scenes", [])), error_msg=err_text, channel_id=persona.channel_id)
+        send_discord_alert(
+            webhook_url=discord_webhook_url,
+            title=f"🚨 Lỗi Reroll {scene_id} ({pkg.name})",
+            message=err_text,
+            level="error",
+        )
+        raise
 
 
 def main():

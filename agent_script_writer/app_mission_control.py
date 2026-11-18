@@ -39,6 +39,13 @@ from core.timing import budget_report, finalize_timing
 from tools.scoring import compute_fss, fact_keys, new_unique_facts, passed
 from tools.verify import classify_tier, dedupe_facts, verify_evidence
 from tools.youtube_autopsy import build_input
+from ui_studio_tabs import (
+    get_discord_webhook,
+    render_niche_radar_tab,
+    render_overview_tab,
+    render_phase2_video_tab,
+    render_qa_output_tab,
+)
 
 
 # =====================================================================
@@ -572,6 +579,7 @@ if current_job.get("status") == "RUNNING" and not current_job.get("script"):
                 package_dir=pkg_path,
                 channel_id=current_job.get("channel_preset", "med_forensic_us"),
                 max_scenes=5,
+                discord_webhook_url=get_discord_webhook(),
             )
             current_job["phase2_mp4"] = str(mp4_out)
             st.success(f"🎉 Đã dựng xong Video mẫu: {mp4_out}")
@@ -580,11 +588,27 @@ if current_job.get("status") == "RUNNING" and not current_job.get("script"):
 st.header(f"🎯 Dự Án: `{current_job['job_id']}`")
 st.markdown(f"**URL Đối thủ:** [{current_job['url']}]({current_job['url']}) | **Ngôn ngữ:** `{current_job.get('language', 'en').upper()}` | **Trạng thái:** `{current_job.get('status')}`")
 
-tab1, tab2, tab3 = st.tabs([
-    "🏛️ 1. Phiên Tòa Tranh Biện (Adversarial Debate)",
-    "🎬 2. Bảng Phân Cảnh & Sửa Kịch Bản (Scene Editor)",
-    "📦 3. Đóng Gói Xuất Xưởng (Export & JSON)"
+tab0, tab_radar, tab1, tab2, tab_video, tab_qa, tab3 = st.tabs([
+    "📊 0. Tổng Quan (Realtime)",
+    "🎯 1. Niche Radar",
+    "🏛️ 2. Tranh Biện (Phase 1)",
+    "📝 3. Sửa Kịch Bản (Scene Editor)",
+    "🎬 4. Dựng Video (Phase 2)",
+    "🛡️ 5. Agent QA & Thành Phẩm",
+    "📦 6. Export JSON",
 ])
+
+with tab0:
+    render_overview_tab()
+
+with tab_radar:
+    render_niche_radar_tab()
+
+with tab_video:
+    render_phase2_video_tab()
+
+with tab_qa:
+    render_qa_output_tab()
 
 
 # =====================================================================
